@@ -1,6 +1,6 @@
 package carFy.delivery.config;
 
-import carFy.delivery.user.UserRepository;
+import carFy.delivery.models.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;

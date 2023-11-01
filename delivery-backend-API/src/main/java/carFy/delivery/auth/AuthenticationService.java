@@ -1,9 +1,9 @@
 package carFy.delivery.auth;
 
 import carFy.delivery.config.JwtService;
-import carFy.delivery.user.Role;
-import carFy.delivery.user.User;
-import carFy.delivery.user.UserRepository;
+import carFy.delivery.models.user.Role;
+import carFy.delivery.models.user.User;
+import carFy.delivery.models.user.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +50,7 @@ public class AuthenticationService {
         return  AuthenticationResponse.builder()
                 .token(jwtToken)
                 .username(request.getUsername())
+                .role(user.getRole().name())
                 .build();
     }
 

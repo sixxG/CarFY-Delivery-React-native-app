@@ -1,7 +1,7 @@
 package carFy.delivery.models.contracts;
 
 import carFy.delivery.models.auto.Auto;
-import carFy.delivery.user.User;
+import carFy.delivery.models.user.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -28,12 +28,18 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     String fioManager;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_man_id")
+    User deliveryMan;
+
     String additionalOptions;
     LocalDateTime dateStart;
     String typeReceipt;
     LocalDateTime dateEnd;
     String typeReturn;
     double price;
+    double priceDelivery;
     String status;
     String note;
 

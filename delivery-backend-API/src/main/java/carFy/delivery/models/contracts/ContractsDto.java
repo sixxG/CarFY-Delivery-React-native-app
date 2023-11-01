@@ -1,5 +1,6 @@
 package carFy.delivery.models.contracts;
 
+import carFy.delivery.models.user.UserDto;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,7 +27,10 @@ public class ContractsDto {
     String typeReturn;
     String status;
     String note;
+    Double price;
+    Double deliveryPrice;
 
+    Long deliveryManId;
     Long autoId;
-    Long userId;
+    UserDto customer;
 }

@@ -19,6 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class ContractController {
     ContractServiceImpl service;
 
+    @GetMapping("/for-delivery")
+    public ResponseEntity getContractsToDelivery(Pageable pageable) {
+        try {
+            return ResponseEntity.ok().body(service.getAllContractsToDelivery(pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @GetMapping
     public ResponseEntity findAll(Pageable pageable) {
         try {
@@ -37,7 +46,7 @@ public class ContractController {
         }
     }
 
-    @GetMapping("/{status}")
+    @GetMapping("/status/{status}")
     public ResponseEntity findByStatus(@PathVariable String status, Pageable pageable) {
         try {
             return ResponseEntity.ok().body(service.findByStatus(Status.valueOf(status), pageable));

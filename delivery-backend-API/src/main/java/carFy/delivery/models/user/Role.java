@@ -1,4 +1,4 @@
-package carFy.delivery.user;
+package carFy.delivery.models.user;
 
 public enum Role {
     USER,

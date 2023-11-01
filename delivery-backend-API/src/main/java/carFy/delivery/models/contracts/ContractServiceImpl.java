@@ -1,9 +1,5 @@
 package carFy.delivery.models.contracts;
 
-import carFy.delivery.models.auto.Auto;
-import carFy.delivery.models.auto.AutoDto;
-import carFy.delivery.models.auto.AutoMapper;
-import carFy.delivery.models.auto.AutoRepository;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +7,11 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,30 @@ public class ContractServiceImpl implements ContractService{
 
     ContractRepository repository;
     ContractMapper mapper;
+
+    @Override
+    public Map<String, List<ContractsDto>> getAllContractsToDelivery(Pageable pageable) {
+        Map<String, List<ContractsDto>> contractsForDeliverByDay = new TreeMap<>();
+        List<ContractsDto> confirmedContracts = repository.findAllByStatus(Status.CONFIRMED.getTitle())
+                .stream()
+                .filter(contract -> !contract.getTypeReceipt().equals("Офис"))
+                .map(mapper::toDto)
+                .toList();
+
+        for (ContractsDto dto: confirmedContracts) {
+            if (contractsForDeliverByDay.get(dto.getDateStart().toLocalDate().toString()) == null) {
+                List<ContractsDto> contracts = new ArrayList<>();
+                contracts.add(dto);
+                contractsForDeliverByDay.put(dto.getDateStart().toLocalDate().toString(), contracts);
+            } else {
+                List<ContractsDto> contracts = contractsForDeliverByDay.get(dto.getDateStart().toLocalDate().toString());
+                contracts.add(dto);
+                contractsForDeliverByDay.put(dto.getDateStart().toLocalDate().toString(), contracts);
+            }
+        }
+
+        return contractsForDeliverByDay;
+    }
 
     @Override
     public Page<ContractsDto> findAll(Pageable pageable) {
