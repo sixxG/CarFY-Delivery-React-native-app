@@ -49,6 +49,7 @@ public class ContractMapper {
             customer.setAddress(entity.getUser().getAddress());
             customer.setPhone(entity.getUser().getPhone());
             customer.setDriverLicense(entity.getUser().getDriverLicense());
+            customer.setImg(entity.getUser().getImg());
             dto.setCustomer(customer);
         } else {
             return null;

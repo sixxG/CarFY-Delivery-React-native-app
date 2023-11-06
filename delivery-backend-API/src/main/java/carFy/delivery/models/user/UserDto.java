@@ -23,4 +23,5 @@ public class UserDto {
     String address;
     String phone;
     String driverLicense;
+    String img;
 }

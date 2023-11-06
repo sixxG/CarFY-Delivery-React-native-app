@@ -15,6 +15,7 @@ public class UserMapper {
         dto.setAddress(entity.getAddress());
         dto.setPhone(entity.getPhone());
         dto.setDriverLicense(entity.getDriverLicense());
+        dto.setImg(entity.getImg());
 
         return dto;
     }
@@ -29,6 +30,7 @@ public class UserMapper {
         entity.setAddress(dto.getAddress());
         entity.setPhone(dto.getPhone());
         entity.setDriverLicense(dto.getDriverLicense());
+        entity.setImg(dto.getImg());
 
         return entity;
     }

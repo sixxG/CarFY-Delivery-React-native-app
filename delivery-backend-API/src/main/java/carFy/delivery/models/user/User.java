@@ -42,6 +42,7 @@ public class User implements UserDetails {
     private String address;
     private String phone;
     private String driverLicense;
+    private String img;
     @Enumerated(EnumType.STRING)
     private Role role;
 

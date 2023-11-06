@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,15 +35,16 @@ public class JwtService {
         return  generateToken(new HashMap<>(), userDetails);
     }
 
-    public String generateToken(
-            Map<String, Object> extraClaims,
-            UserDetails userDetails) {
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+        Date currentTime = Date.from(java.time.Instant.now().atZone(moscowZone).toInstant());
+
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
+                .setIssuedAt(currentTime)
+                .setExpiration(Date.from(java.time.Instant.now().atZone(moscowZone).plusHours(1).toInstant()))
                 .signWith(getSingKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -50,6 +52,10 @@ public class JwtService {
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    public Date tokenValidUntil(String token) {
+        return extractExpiration(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -60,7 +66,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSingKey())

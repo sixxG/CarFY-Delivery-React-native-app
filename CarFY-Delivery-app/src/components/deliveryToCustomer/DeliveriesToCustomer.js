@@ -1,18 +1,23 @@
 import styled from 'styled-components/native';
 import { Pressable, View } from "react-native";
+import { IMAGE_CUSTOMER_URL } from '../../config';
 
-const DeliveriesToCustomer = ({ navigate, item }) => {
+const DeliveriesToCustomer = ({ navigation, item }) => {
     const { customer, car, active, time, addressDelivery } = item;
 
     return (
-        <GroupItem onPress={navigate.bind(this, 'DeliveryDetail', item)}>
+        <GroupItem onPress={() => {
+                navigation.setParams(item);
+                navigation.navigate('DeliveryDetail', {item: item});
+            }}>
             <Pressable onPress={() => {
                 console.log("Press");
             }}>
                 <CarImg 
                     source={{
-                        uri: car.img
+                        uri: `${IMAGE_CUSTOMER_URL}/${customer.img}`,
                     }}
+                    defaultSource={require('../../../assets/icon.png')}
                 />
             </Pressable>
 

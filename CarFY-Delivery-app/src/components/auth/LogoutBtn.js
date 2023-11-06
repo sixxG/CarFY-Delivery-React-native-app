@@ -2,9 +2,9 @@ import React from "react";
 import styled from 'styled-components';
 import { AntDesign } from '@expo/vector-icons';
 
-const LogoutBtn = ({ navigation, parent }) => {
+const LogoutBtn = ({ navigation }) => {
     return (
-        <LogoutButton onPress={navigation.navigate.bind(parent, 'Login')}>
+        <LogoutButton onPress={() => navigation.navigate('Login')}>
             <AntDesign name="logout" size={30} color="#46F046" />
         </LogoutButton>
     )

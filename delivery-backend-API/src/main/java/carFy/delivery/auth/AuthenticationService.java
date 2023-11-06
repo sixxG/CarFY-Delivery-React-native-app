@@ -4,7 +4,6 @@ import carFy.delivery.config.JwtService;
 import carFy.delivery.models.user.Role;
 import carFy.delivery.models.user.User;
 import carFy.delivery.models.user.UserRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +11,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -47,14 +48,13 @@ public class AuthenticationService {
         var user = repository.findByUsername(request.getUsername())
                 .orElseThrow();
         var jwtToken = jwtService.generateToken(user);
+        ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+        var validTo = jwtService.extractAllClaims(jwtToken).getExpiration().toInstant().atZone(moscowZone).toLocalDateTime();
         return  AuthenticationResponse.builder()
                 .token(jwtToken)
                 .username(request.getUsername())
                 .role(user.getRole().name())
+                .validUntil(validTo)
                 .build();
-    }
-
-    public Object logout(HttpServletRequest request) {
-        return null;
     }
 }

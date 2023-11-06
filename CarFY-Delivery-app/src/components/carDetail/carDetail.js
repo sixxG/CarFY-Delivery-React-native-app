@@ -2,20 +2,16 @@ import styled from 'styled-components/native';
 import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { URL, IMAGE_URL } from '../../config';
+import { URL, IMAGE_CAR_URL } from '../../config';
 import { Pressable } from "react-native";
 import Spinner from "react-native-loading-spinner-overlay";
 
 const CarDetail = ({ carId, navigation  }) => {
 
     const [carInfo, setCarInfo] = useState(Object);
-
     const [isLoading, setIsLoading] = useState(false);
 
-    const [showCarImg, setShowCarImg] = useState(false);
-
     useEffect(() => {
-
         function getCarInfo (carId) {
             setIsLoading(true);
             AsyncStorage.getItem('userInfo').then(res => { 
@@ -40,9 +36,7 @@ const CarDetail = ({ carId, navigation  }) => {
             })
         }
         getCarInfo(carId);
-    }, []);
-
-    console.log(carInfo);
+    }, [carId]);
 
     return (
 
@@ -56,7 +50,7 @@ const CarDetail = ({ carId, navigation  }) => {
                 <CarImg 
                     source={{
                         uri:
-                        `${IMAGE_URL}/${carInfo.image}`,
+                        `${IMAGE_CAR_URL}/${carInfo.image}`,
                     }}
                 />
             </Pressable>
@@ -111,12 +105,6 @@ const FullName = styled.Text`
     color: #2a86ff;
 `;
 
-const CarImgFullScreen = styled.Image`
-    display: flex;
-    width: 100%;
-    height: 500px;
-`;
-
 const CarImg = styled.Image`
     width: 100%;
     height: 150px;
@@ -128,7 +116,7 @@ const CarInfoBlock = styled.View`
 
 const CarInfoContainer = styled.View`
     padding: 10px 20px 0 20px;
-    margin-top: 20px;
+    margin-top: 15px;
     border-top-width: 1px;
     border-top-color: #c3dcff;
 `;

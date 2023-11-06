@@ -1,21 +1,36 @@
 import { React, useState } from "react";
-import { View, StyleSheet, TextInput, Text, Pressable, Alert } from "react-native";
+import { View, StyleSheet, TextInput, Text, TouchableOpacity, Alert } from "react-native";
+import styled from 'styled-components/native';
 import axios from "axios";
 import { URL } from "../../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Spinner from "react-native-loading-spinner-overlay";
 axios.defaults.timeout = 5000
 
-const Login = ({navigate}) => {
+const Login = ({navigation}) => {
 
     const [username, setUsername] = useState(null);
     const [password, setPassword] = useState(null);
+
+    const [usernameError, setUsetnameError] = useState(false);
+    const [passwordError, setPasswordError] = useState(false);
 
     const [userInfo, setUserInfo] = useState();
     const [isLoading, setIsLoading] = useState(false);
 
     function login (username, password) {
         setIsLoading(true);
+
+        if (username === null || password === null || username === '' || password === '') {
+            if (username === null || username === '') {
+                setUsetnameError(true);
+            }
+            if (password === null || password === '') {
+                setPasswordError(true);
+            }
+            setIsLoading(false);
+            return;
+        }
 
         axios
             .post(`${URL}/auth/authenticate`, {
@@ -25,15 +40,16 @@ const Login = ({navigate}) => {
             .then(res => {
                 let userInfo = res.data;
                 setUserInfo(userInfo);
-                AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
-                setIsLoading(false);
-                if (userInfo.role === "USER") {
-                    navigate('Home');
-                } else if (userInfo.role === "ADMIN") {
-                    navigate('Registration');
-                } else {
-                    navigate('Home');
-                }
+                AsyncStorage.setItem("userInfo", JSON.stringify(userInfo)).then(() => {
+                    setIsLoading(false);
+                    if (userInfo.role === "DELIVERY_MAN") {
+                        navigation.navigate('Home', {userInfo: userInfo});
+                    } else if (userInfo.role === "ADMIN") {
+                        navigation.navigate('Admin');
+                    }
+                }).catch(() => {
+                    navigation.navigate('Login');
+                });
             })
             .catch(e => {
                 console.log(`login error ${e}`);
@@ -56,26 +72,26 @@ const Login = ({navigate}) => {
                     Вход
                 </Text>
 
-                <TextInput 
-                    style={styles.input}
+                <Input 
+                    error={usernameError}
                     value={username}
                     autoCapitalize="none"
-                    placeholder="Логин" 
-                    onChangeText={(text) => {setUsername(text)}}
+                    placeholder={usernameError ? "Введите логин!" : "Логин"} 
+                    onChangeText={(text) => {setUsername(text); setUsetnameError(false);}}
                 />
 
-                <TextInput 
-                    style={styles.input}
-                    value={password} 
-                    placeholder="Пароль"
-                    onChangeText={(text) => {setPassword(text)}} 
+                <Input
+                    error={passwordError}
+                    value={password}
+                    placeholder={passwordError ? "Введите пароль!" : "Пароль"} 
+                    onChangeText={(text) => {setPassword(text); setPasswordError(false);}} 
                     autoCapitalize="none"
                     secureTextEntry
                 />
 
-                <Pressable style={styles.loginButton} onPress={() => {login(username, password)}}>
+                <TouchableOpacity style={styles.loginButton} onPress={() => {login(username, password)}}>
                     <Text style={styles.loginButtonText}>Войти</Text>
-                </Pressable>
+                </TouchableOpacity>
 
             </View>
 
@@ -83,13 +99,25 @@ const Login = ({navigate}) => {
     );
 }
 
+const Input = styled.TextInput`
+    margin-bottom: 12px;
+    border-width: 2px;
+    text-align: center;
+    background-color: #E5E3E3;
+    padding: 10px;
+    font-size: 20px;
+    border-color: ${props => props.error ? 'red' : '#bbb'};
+    color: ${props => props.error ? 'red' : 'black'};
+    border-radius: 15px;
+    width: 100%;
+`;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#06bcee',
-        // backgroundColor: 'white',
     },
     wrapper: {
         width: '80%',
@@ -98,17 +126,6 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 20,
         backgroundColor: '#404040',
-    },
-    input: {
-        marginBottom: 12,
-        borderWidth: 2,
-        textAlign: "center",
-        backgroundColor: '#E5E3E3',
-        padding: 10,
-        fontSize: 20,
-        borderColor: '#bbb',
-        borderRadius: 15,
-        width: '100%',
     },
     loginButton: {
         alignItems: 'center',
@@ -119,7 +136,6 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         backgroundColor: '#46F046',
         width: '100%',
-
     },
     loginButtonText: {
         fontSize: 35,
@@ -131,19 +147,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'white',
         marginBottom: 25,
-    },
-    blockError: {
-        padding: 10,
-        borderRadius: 50,
-        borderWidth: 1,
-        borderColor: "red",
-        backgroundColor: 'white',
-        marginBottom: 15,
-    },
-    textError: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: 'red',
     }
 });
 

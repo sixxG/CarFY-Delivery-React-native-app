@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { RegistrationForm, DeliveryMansStatisticForm, LogoutBtn } from '../components';
+import { RegistrationForm, DeliveryMansStatisticForm, LogoutBtn } from '../../components';
 import styled from 'styled-components';
 
 const AdminScreen = ({ navigation }) => (
@@ -21,7 +21,6 @@ AdminScreen.navigationOptions = {
     headerLeft: ()=> null,
     headerTintColor: '#2a86ff',
     headerStyle: {
-        // backgroundColor: '#06bcee',
         elevation: 0.8,
         shadowOpacity: 0.8
     }

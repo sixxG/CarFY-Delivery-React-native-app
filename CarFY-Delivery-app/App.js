@@ -3,9 +3,9 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { HomeScreen, LoginScreen, DeliveryDetailScreen, AdminScreen, CarImgFullScreen } from './src/screens';
+import { HomeScreen, LoginScreen, DeliveryDetailScreen, AdminScreen, SettingsScreen } from './src/navigation';
 
-const AppNavigator = createStackNavigator(
+const AppNavigatorLogin = createStackNavigator(
   {
     Home: {
       screen: HomeScreen,
@@ -16,11 +16,11 @@ const AppNavigator = createStackNavigator(
     DeliveryDetail: {
       screen: DeliveryDetailScreen,
     },
-    CarImg: {
-      screen: CarImgFullScreen,
-    },
-    Registration: {
+    Admin: {
       screen: AdminScreen,
+    },
+    Settings: {
+      screen: SettingsScreen,
     }
   },
   {
@@ -28,13 +28,60 @@ const AppNavigator = createStackNavigator(
   }
 )
 
-const AppContainer = createAppContainer(AppNavigator);
+const AppNavigatorAuthted = createStackNavigator(
+  {
+    Home: {
+      screen: HomeScreen,
+    },
+    Login: {
+      screen: LoginScreen,
+    },
+    DeliveryDetail: {
+      screen: DeliveryDetailScreen,
+    },
+    Admin: {
+      screen: AdminScreen,
+    },
+    Settings: {
+      screen: SettingsScreen,
+    }
+  },
+  {
+    initialRouteName: 'Home'
+  }
+)
+
+const AppNavigatorAdmin = createStackNavigator(
+  {
+    Home: {
+      screen: HomeScreen,
+    },
+    Login: {
+      screen: LoginScreen,
+    },
+    DeliveryDetail: {
+      screen: DeliveryDetailScreen,
+    },
+    Admin: {
+      screen: AdminScreen,
+    },
+    Settings: {
+      screen: SettingsScreen,
+    }
+  },
+  {
+    initialRouteName: 'Admin'
+  }
+)
+
+const AppContainerLogin = createAppContainer(AppNavigatorLogin);
+const AppContainerAuthted = createAppContainer(AppNavigatorAuthted);
+const AppContainerAdmin = createAppContainer(AppNavigatorAdmin);
 
 const App = () => {
   const [userInfo, setUserInfo] = useState();
 
   useEffect(() => {
-    // Функция для асинхронного получения данных из AsyncStorage
     const getUserInfo = async () => {
       try {
         const res = await AsyncStorage.getItem('userInfo');
@@ -46,11 +93,29 @@ const App = () => {
       }
     }
 
-    // Вызываем функцию для получения данных
     getUserInfo();
-  }, []); // Пустой массив зависимостей, чтобы useEffect выполнялся только один раз
+  }, []);
 
-  return <AppContainer />;
+  if (userInfo) {
+    let validUntil = userInfo.toString().split("\"")[15];
+    let role = userInfo.toString().split("\"")[11];
+
+    if (new Date(validUntil) < new Date()) {
+      return <AppContainerLogin />;
+    } 
+    else {
+      if (role === "ADMIN") {
+        return <AppContainerAdmin />;
+      } else {
+        return (
+          <AppContainerAuthted />
+        );
+      }
+    }
+
+  } else {
+    return <AppContainerLogin />;
+  }
 }
 
 export default App;

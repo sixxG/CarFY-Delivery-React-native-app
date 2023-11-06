@@ -74,7 +74,6 @@ const DeliveryMansStatisticForm = ({navigate}) => {
                     let data = res.data;
                     setCountDelivery(data.countContracts);
                     setSummaryPriceDelivery(data.summaryPriceDelivery);
-                    console.log(data);
 
                     setShowStatistic(true);
                     setIsLoading(false);
