@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -21,4 +20,6 @@ public class AuthenticationResponse {
     String username;
     String role;
     LocalDateTime validUntil;
+    String img;
+    int countDelivery;
 }

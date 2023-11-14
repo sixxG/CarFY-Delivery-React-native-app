@@ -1,6 +1,8 @@
 package carFy.delivery.auth;
 
 import carFy.delivery.config.JwtService;
+import carFy.delivery.models.contracts.ContractRepository;
+import carFy.delivery.models.contracts.Status;
 import carFy.delivery.models.user.Role;
 import carFy.delivery.models.user.User;
 import carFy.delivery.models.user.UserRepository;
@@ -19,6 +21,7 @@ import java.time.ZoneId;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService {
     UserRepository repository;
+    ContractRepository contractRepository;
     PasswordEncoder passwordEncoder;
     JwtService jwtService;
     AuthenticationManager authenticationManager;
@@ -50,11 +53,16 @@ public class AuthenticationService {
         var jwtToken = jwtService.generateToken(user);
         ZoneId moscowZone = ZoneId.of("Europe/Moscow");
         var validTo = jwtService.extractAllClaims(jwtToken).getExpiration().toInstant().atZone(moscowZone).toLocalDateTime();
+        var countDelivery = contractRepository.findAllByStatusAndDeliveryMan(Status.COMPLETED.getTitle(), user)
+                .size();
+
         return  AuthenticationResponse.builder()
                 .token(jwtToken)
                 .username(request.getUsername())
                 .role(user.getRole().name())
                 .validUntil(validTo)
+                .img(user.getImg())
+                .countDelivery(countDelivery)
                 .build();
     }
 }

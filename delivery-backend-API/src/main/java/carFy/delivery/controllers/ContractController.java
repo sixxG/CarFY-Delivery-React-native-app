@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
+
 @RestController()
 @RequestMapping("/api/v1/contracts")
 @RequiredArgsConstructor
@@ -50,6 +52,26 @@ public class ContractController {
     public ResponseEntity findByStatus(@PathVariable String status, Pageable pageable) {
         try {
             return ResponseEntity.ok().body(service.findByStatus(Status.valueOf(status), pageable));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/take/{contractId}")
+    public ResponseEntity takeContractDelivery(@PathVariable String contractId, Principal user) {
+        try {
+            service.takeContractDelivery(Long.valueOf(contractId), user);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/complete/{contractId}")
+    public ResponseEntity completeDelivery(@PathVariable String contractId) {
+        try {
+            service.completeDelivery(Long.valueOf(contractId));
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

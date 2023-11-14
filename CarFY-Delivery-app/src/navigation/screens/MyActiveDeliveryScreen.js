@@ -11,52 +11,53 @@ import { URL } from '../../config';
 
 import {CarDetail} from '../../components';
 
-const DeliveryDetailScreen = ({ navigation }) => {
+const MyActiveDeliveryScreen = ({ navigation }) => {
 
     const { item } = navigation.state.params;
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const takeDeliveryContract = async (contractId) => {
+    const completeDeliveryContract = async (contractId) => {
         setIsLoading(true);
 
         AsyncStorage.getItem('userInfo').then(res => { 
-            let token = res.toString().split("\"")[3];
+            const respObject = JSON.parse(res);
+
+            let token = respObject.token;
             
             axios
-            .get(`${URL}/contracts/take/${contractId}`, {
+            .get(`${URL}/contracts/complete/${contractId}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                     }
             })
-                .then(res => {
-                    const status = res.status;
-                    console.log(status);
-                    if (status === 200) {
-                        setIsLoading(false);
-                        navigation.navigate('MyDelivery');
-                    }
+            .then(res => {
+                const status = res.status;
+                if (status === 200) {
                     setIsLoading(false);
-                })
-                .catch(e => {
-                    if (e.response) {
-                        console.log(`Status code: ${e.response.status}`);
-                        console.log(`Response data:`, e.response.data);
-                    } else {
-                        console.log(`Network Error: ${e.message}`);
-                    }
-                    if (e.response.status === 400) {
-                        setIsLoading(false);
-                        Alert.alert('Ошибка по времени!', 'Вы не можете взять эту доставку т.к. уже имеете доставку на такое же время!', [
-                            {
-                              text: 'Ясно',
-                              style: 'cancel',
-                            },
-                            {text: 'Понятно'},
-                        ]);
-                    }
+                    navigation.navigate('MyDelivery', {update: true});
+                }
+                setIsLoading(false);
+            })
+            .catch(e => {
+                if (e.response) {
+                    console.log(`Status code: ${e.response.status}`);
+                    console.log(`Response data:`, e.response.data);
+                } else {
+                    console.log(`Network Error: ${e.message}`);
+                }
+                if (e.response.status === 400) {
                     setIsLoading(false);
-                })
+                    Alert.alert('Ещё не время!', 'Время аренды ещё не настало!', [
+                        {
+                            text: 'Ясно',
+                            style: 'cancel',
+                        },
+                        {text: 'Понятно'},
+                    ]);
+                }
+                setIsLoading(false);
+            })
         })
         .catch(error => {
             console.log(error);
@@ -77,11 +78,10 @@ const DeliveryDetailScreen = ({ navigation }) => {
                     <FormulaButtonView>
                         <ButtonWraper 
                             onPress={() => {
-                                console.log("press");
-                                takeDeliveryContract(item.id);
+                                completeDeliveryContract(item.id);
                             }}
                         >
-                            <ButtonDetailCarText>Взять доставку</ButtonDetailCarText>
+                            <ButtonDetailCarText>Завершить доставку</ButtonDetailCarText>
                         </ButtonWraper>
                     </FormulaButtonView>
 
@@ -142,7 +142,7 @@ const ButtonWraper = styled.TouchableOpacity`
     align-items: center;
     border-radius: 30px;
     height: 45px;
-    background: #2a86ff;
+    background: #84d269;
 `;
 
 const ButtonDetailCarText = styled.Text`
@@ -183,7 +183,7 @@ const Container = styled.View`
     margin-bottom: 10px;
 `;
 
-DeliveryDetailScreen.navigationOptions = {
+MyActiveDeliveryScreen.navigationOptions = {
     title: "Информация о доставке",
     defaultNavigationOptions: {
         gesturesEnabled: false,
@@ -195,4 +195,4 @@ DeliveryDetailScreen.navigationOptions = {
     }
 };
 
-export default DeliveryDetailScreen;
+export default MyActiveDeliveryScreen;

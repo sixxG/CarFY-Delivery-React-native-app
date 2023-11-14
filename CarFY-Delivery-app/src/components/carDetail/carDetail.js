@@ -3,13 +3,60 @@ import React, { useState, useEffect } from 'react';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { URL, IMAGE_CAR_URL } from '../../config';
-import { Pressable } from "react-native";
+import { View, Pressable, Modal } from "react-native";
 import Spinner from "react-native-loading-spinner-overlay";
 
 const CarDetail = ({ carId, navigation  }) => {
 
     const [carInfo, setCarInfo] = useState(Object);
     const [isLoading, setIsLoading] = useState(false);
+
+    const [openModal, setOpenModal] = useState(false);
+
+    function renderModal(url) {
+        return (
+            <Modal 
+                visible={openModal} 
+                animationIn="slideInLeft"
+                animationOut="slideOutRight" 
+                transparent={true}
+                onRequestClose={() => {
+                    setOpenModal(!openModal);
+                }}
+            >
+                <Pressable 
+                    style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                    }}
+                    onPress={() => setOpenModal(false)}
+                >
+                    <View
+                        style={{
+                            backgroundColor: 'white',
+                            flex: 1,
+                            margin: 20,
+                            borderRadius: 20,
+                            height: '20%'
+                        }}
+                    >
+                        
+                        <CarImgPopup 
+                            source={{
+                                uri: `${IMAGE_CAR_URL}/${url}`,
+                            }}
+                            defaultSource={require('../../../assets/icon.png')}
+                        />
+
+                    </View>
+
+                </Pressable>
+            </Modal>
+        )
+    }
 
     useEffect(() => {
         function getCarInfo (carId) {
@@ -45,8 +92,9 @@ const CarDetail = ({ carId, navigation  }) => {
             <Spinner visible={isLoading} />
 
             <Pressable onPress={() => {
-                                navigation.navigate.bind('CarImg');
-            }}>
+                    setOpenModal(true);
+                }}
+            >
                 <CarImg 
                     source={{
                         uri:
@@ -94,6 +142,9 @@ const CarDetail = ({ carId, navigation  }) => {
                     <AttributeValue>{carInfo.win_Number}</AttributeValue>
                 </InfoRow>
             </CarInfoBlock>
+
+            {renderModal(carInfo.image)}
+
         </CarInfoContainer>
     );
 };
@@ -108,6 +159,12 @@ const FullName = styled.Text`
 const CarImg = styled.Image`
     width: 100%;
     height: 150px;
+`;
+
+const CarImgPopup = styled.Image`
+    border-radius: 20px;
+    width: 100%;
+    height: 200px;
 `;
 
 const CarInfoBlock = styled.View`

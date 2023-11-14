@@ -18,7 +18,7 @@ public class ContractMapper {
     AutoRepository autoRepository;
     UserRepository userRepository;
 
-    ContractsDto toDto(Contract entity) {
+    public ContractsDto toDto(Contract entity) {
         if (entity == null) {
             return null;
         }
@@ -64,7 +64,7 @@ public class ContractMapper {
         return dto;
     }
 
-    Contract toEntity(ContractsDto dto) {
+    public Contract toEntity(ContractsDto dto) {
         if (dto == null) {
             return null;
         }

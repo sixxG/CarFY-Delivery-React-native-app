@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -22,4 +23,7 @@ public interface ContractService {
     ContractsDto update(ContractsDto dto) throws Exception;
 
     void delete(Long id);
+
+    void takeContractDelivery(Long contractId, Principal user) throws Exception;
+    void completeDelivery(Long contractId) throws Exception;
 }

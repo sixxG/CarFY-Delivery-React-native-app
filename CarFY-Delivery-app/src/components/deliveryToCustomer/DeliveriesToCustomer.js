@@ -1,17 +1,72 @@
+import React, { useState } from 'react';
 import styled from 'styled-components/native';
-import { Pressable, View } from "react-native";
+import { Pressable, View, Modal } from "react-native";
 import { IMAGE_CUSTOMER_URL } from '../../config';
 
-const DeliveriesToCustomer = ({ navigation, item }) => {
+const DeliveriesToCustomer = ({ navigation, item, isActiveDelivery }) => {
     const { customer, car, active, time, addressDelivery } = item;
 
+    const [openModal, setOpenModal] = useState(false);
+
+    function renderModal(url) {
+        return (
+            <Modal 
+                visible={openModal} 
+                animationIn="slideInLeft"
+                animationOut="slideOutRight" 
+                transparent={true}
+                onRequestClose={() => {
+                    setOpenModal(!openModal);
+                }}
+            >
+                <Pressable 
+                    style={{
+                        flex: 1,
+                        flexDirection: 'row',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                    }}
+                    onPress={() => setOpenModal(false)}
+                >
+                    <View
+                        style={{
+                            backgroundColor: 'white',
+                            flex: 1,
+                            margin: 20,
+                            borderRadius: 20,
+                            height: '70%'
+                        }}
+                    >
+                        
+                        <CarImgPopup 
+                            source={{
+                                uri: `${IMAGE_CUSTOMER_URL}/${url}`,
+                            }}
+                            defaultSource={require('../../../assets/icon.png')}
+                        />
+
+                    </View>
+
+                </Pressable>
+            </Modal>
+        )
+    }
+
+    function navigateToDeliveryDetailScreen() {
+        navigation.setParams(item);
+
+        if (isActiveDelivery) {
+            navigation.navigate('MyActiveDeliveryDetail', {item: item});
+        } else {
+            navigation.navigate('DeliveryDetail', {item: item});
+        }
+    }
+
     return (
-        <GroupItem onPress={() => {
-                navigation.setParams(item);
-                navigation.navigate('DeliveryDetail', {item: item});
-            }}>
+        <GroupItem onPress={() => navigateToDeliveryDetailScreen()}>
             <Pressable onPress={() => {
-                console.log("Press");
+                setOpenModal(true);
             }}>
                 <CarImg 
                     source={{
@@ -27,6 +82,8 @@ const DeliveriesToCustomer = ({ navigation, item }) => {
             </View>
 
             <GroupDate active={active}>{time}</GroupDate>
+
+            {renderModal(customer.img)}
 
         </GroupItem>    
     );
@@ -63,6 +120,12 @@ const CarImg = styled.Image`
     width: 40px;
     height: 40px;
     margin-right: 15px;
+`;
+
+const CarImgPopup = styled.Image`
+    border-radius: 20px;
+    width: 100%;
+    height: 100%;
 `;
 
 const GroupItem = styled.TouchableOpacity`

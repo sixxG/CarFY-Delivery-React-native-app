@@ -31,6 +31,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         List<Contract> finishedContract = contractRepository.findAllByStatus(Status.COMPLETED.getTitle());
         List<Contract> completedContractsForDeliveryMan = finishedContract
                 .stream()
+                .filter(contract -> contract.getDeliveryMan() != null)
                 .filter(contract -> contract.getDeliveryMan().getId().equals(request.getDeliveryId()))
                 .filter(contract -> contract.getDateStart().toLocalDate().isAfter(request.getDateStart()))
                 .toList();

@@ -3,7 +3,7 @@ import { createStackNavigator } from 'react-navigation-stack';
 import { createAppContainer } from 'react-navigation';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { HomeScreen, LoginScreen, DeliveryDetailScreen, AdminScreen, SettingsScreen } from './src/navigation';
+import { HomeScreen, LoginScreen, DeliveryDetailScreen, AdminScreen, SettingsScreen, MyDeliveryScreen, MyActiveDeliveryScreen } from './src/navigation';
 
 const AppNavigatorLogin = createStackNavigator(
   {
@@ -15,6 +15,12 @@ const AppNavigatorLogin = createStackNavigator(
     },
     DeliveryDetail: {
       screen: DeliveryDetailScreen,
+    },
+    MyDelivery: {
+      screen: MyDeliveryScreen,
+    },
+    MyActiveDeliveryDetail: {
+      screen: MyActiveDeliveryScreen,
     },
     Admin: {
       screen: AdminScreen,
@@ -38,6 +44,12 @@ const AppNavigatorAuthted = createStackNavigator(
     },
     DeliveryDetail: {
       screen: DeliveryDetailScreen,
+    },
+    MyActiveDeliveryDetail: {
+      screen: MyActiveDeliveryScreen,
+    },
+    MyDelivery: {
+      screen: MyDeliveryScreen,
     },
     Admin: {
       screen: AdminScreen,
@@ -89,6 +101,7 @@ const App = () => {
           setUserInfo(res);
         }
       } catch (error) {
+        Alert.alert("Error", "error");
         console.error('Ошибка при получении данных из AsyncStorage', error);
       }
     }

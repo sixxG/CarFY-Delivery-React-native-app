@@ -4,19 +4,25 @@ import styled from 'styled-components/native';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Spinner from "react-native-loading-spinner-overlay";
-import { URL } from '../../config';
+import { URL, IMAGE_CUSTOMER_URL } from '../../config';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 
 import { DeliveriesToCustomer, SectionTitle } from '../../components';
 import { Header } from '../../components/index';
+import { RefreshControl } from 'react-native-gesture-handler';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation, update }) => {
     const [DATA, setData] = useState([]);
+
     const [userName, setUserName] = useState('');
+    const [userImg, setUserImg] = useState("");
+    const [countDelivery, setCountDelivery] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
     const [openModal, setOpenModal] = useState(false);
+
+    const [refresh, setRefresh] = useState(false);
 
     const onMenuPress = () => {
         setOpenModal(!openModal);
@@ -65,11 +71,17 @@ const HomeScreen = ({ navigation }) => {
                                 backgroundColor: '#77b1ff'
                             }}
                         >
-                            <Image source={require("../../../assets/icon.png")} style={styles.profile}/>
+                            <Image
+                                source={{
+                                    uri:
+                                    `${IMAGE_CUSTOMER_URL}/${userImg}`,
+                                }} 
+                                style={styles.profile}
+                            />
                             <Text style={styles.name}>{userName}</Text>
 
                             <View style={{ flexDirection: 'row' }}>
-                                <Text style={styles.deliveries}>500 delivery</Text>
+                                <Text style={styles.deliveries}>Доставок: {countDelivery}</Text>
                                 <Ionicons name="md-car-sport-sharp" size={20} color="black" />
                             </View>
                         </View>
@@ -85,7 +97,17 @@ const HomeScreen = ({ navigation }) => {
 
                             <NavLink onPress={() => {
                                     setOpenModal(false)
-                                    navigation.navigate('Settings');
+                                    navigation.navigate('MyDelivery', {userName: userName});
+                                }}>
+                                <NavLinkBody active={false}>
+                                    <AntDesign name="calendar" size={30} color="black" />
+                                    <Text style={{ marginLeft: 10 }}>Мои доставки</Text>
+                                </NavLinkBody>
+                            </NavLink>
+
+                            <NavLink onPress={() => {
+                                    setOpenModal(false);
+                                    navigation.navigate('Settings', {userName: userName});
                                 }}>
                                 <NavLinkBody active={false}>
                                     <Ionicons name="settings" size={30} color="black" />
@@ -114,74 +136,96 @@ const HomeScreen = ({ navigation }) => {
             </Modal>
         )
     }
+
+    const fetchDataFromServer = async () => {
+        setRefresh(true);
+        const newData = [];
+
+        AsyncStorage.getItem('userInfo').then(res => { 
+            const respObject = JSON.parse(res);
+            // let token = res.toString().split("\"")[3];
+            // let userName = res.toString().split("\"")[7];
+            // let userImg = res.toString().split("\"")[19];
+            // let countDelivery = res.toString().split("\"")[22];
+            let token = respObject.token;
+            let userName = respObject.username;
+            let userImg = respObject.img;
+            let countDelivery = respObject.countDelivery;
+
+            setCountDelivery(countDelivery);
+            setUserImg(userImg);
+            setUserName(userName);
+            
+            // console.log("----------token----------");
+            // console.log(token);
+            axios
+                .get(`${URL}/contracts/for-delivery`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(res => {
+                    const data = res.data;
+                    let active = true;
+
+                    for (const date in data) {
+                        if (data.hasOwnProperty(date)) {
+                            const period = new Date(date);
+                            const options = { day: 'numeric', month: 'long' };
+                            const formattedDate = period.toLocaleDateString('ru-RU', options);
+
+                            const dateData = data[date];
+
+                            const dataForDate = [];
+
+                            for (const item in dateData) {
+                                const element = {
+                                    id: dateData[item].id,
+                                    time: dateData[item].dateStart.split('T')[1].slice(0, 5),
+                                    customer: {
+                                        fullName: dateData[item].customer.fio,
+                                        phone: dateData[item].customer.phone,
+                                        img: dateData[item].customer.img,
+                                    },
+                                    car: {
+                                        id: dateData[item].autoId,
+                                    },
+                                    addressDelivery: dateData[item].typeReceipt,
+                                    active: active,
+                                }
+                                active = false;
+                                dataForDate.push(element);
+                            }
+
+                            newData.push({
+                                title: formattedDate,
+                                data: dataForDate,
+                            });
+                        }
+                    }
+
+                    setData(newData);
+                    setIsLoading(false);
+                    setRefresh(false);
+                })
+                .catch(e => {
+                    console.log(`Server error ${e}`);
+                    setIsLoading(false);
+                    setRefresh(false);
+                })
+        })
+        .catch(error => {
+            console.log(error);
+        })
+    };
   
     useEffect(() => {
         setOpenModal(false);
-        const fetchDataFromServer = async () => {
-            setIsLoading(true);
-            const newData = [];
-
-            AsyncStorage.getItem('userInfo').then(res => { 
-                let token = res.toString().split("\"")[3];
-                let userName = res.toString().split("\"")[7];
-                setUserName(userName);
-                
-                // console.log("----------token----------");
-                // console.log(token);
-                axios
-                    .get(`${URL}/contracts/for-delivery`, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    })
-                    .then(res => {
-                        const data = res.data;
-                        let active = true;
-
-                        for (const date in data) {
-                            if (data.hasOwnProperty(date)) {
-                                const period = new Date(date);
-                                const options = { day: 'numeric', month: 'long' };
-                                const formattedDate = period.toLocaleDateString('ru-RU', options);
-
-                                const dateData = data[date];
-                                const dataForDate = dateData.map(item => ({
-                                    time: item.dateStart.split('T')[1].slice(0, 5),
-                                    customer: {
-                                        fullName: item.customer.fio,
-                                        phone: item.customer.phone,
-                                        img: item.customer.img,
-                                    },
-                                    car: {
-                                        id: item.autoId,
-                                    },
-                                    addressDelivery: item.customer.address,
-                                    active: active,
-                                }));
-                                active = false;
-
-                                newData.push({
-                                    title: formattedDate,
-                                    data: dataForDate,
-                                });
-                            }
-                        }
-
-                        setData(newData);
-                        setIsLoading(false);
-                    })
-                    .catch(e => {
-                        console.log(`Server error ${e}`);
-                        setIsLoading(false);
-                    })
-            })
-            .catch(error => {
-                console.log(error);
-            })
-        };
+        setIsLoading(true);
 
         fetchDataFromServer();
-    }, [navigation]);
+        setIsLoading(false);
+    }, [navigation, update]);
   
     return (
         <Container>
@@ -191,9 +235,15 @@ const HomeScreen = ({ navigation }) => {
             <Header onMenuPress={onMenuPress} title={'Доставки'}/>
 
             <SectionList
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => fetchDataFromServer()}
+                    />
+                }
                 sections={DATA}
                 keyExtractor={(item, index) => index}
-                renderItem={({ item }) => <DeliveriesToCustomer navigation={navigation} item={item} />}
+                renderItem={({ item }) => <DeliveriesToCustomer navigation={navigation} item={item} isActiveDelivery={false}/>}
                 renderSectionHeader={({ section: { title } }) => (
                     <SectionTitle>{title}</SectionTitle>
                 )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Modal, StyleSheet, Text, Pressable, Image } from "react-native";
+import { SectionList, View, Modal, StyleSheet, Text, Pressable, Image } from "react-native";
 import styled from 'styled-components/native';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -8,16 +8,15 @@ import { URL, IMAGE_CUSTOMER_URL } from '../../config';
 import { Ionicons } from '@expo/vector-icons';
 import { AntDesign } from '@expo/vector-icons';
 
+import { DeliveriesToCustomer, SectionTitle } from '../../components';
 import { Header } from '../../components/index';
-import EditDeliverymanForm from '../../components/settings/EditDeliverymanForm';
 
-const SettingsScreen = ({ navigation }) => {
-    const userName = navigation.state.params.userName || null;
+const MyDeliveryScreen = ({ navigation, update }) => {
+    const [DATA, setData] = useState([]);
 
-    const [userInfo, setUserInfo] = useState(null);
+    const [userName, setUserName] = useState('');
     const [userImg, setUserImg] = useState("");
     const [countDelivery, setCountDelivery] = useState(0);
-
     const [isLoading, setIsLoading] = useState(false);
 
     const [openModal, setOpenModal] = useState(false);
@@ -62,7 +61,7 @@ const SettingsScreen = ({ navigation }) => {
                     >
                         <View
                             style={{ 
-                                width: undefined,
+                                width: undefined, 
                                 padding: 16, 
                                 paddingTop: 30, 
                                 borderTopRightRadius: 20, 
@@ -73,7 +72,7 @@ const SettingsScreen = ({ navigation }) => {
                                 source={{
                                     uri:
                                     `${IMAGE_CUSTOMER_URL}/${userImg}`,
-                                }} 
+                                }}  
                                 style={styles.profile}
                             />
                             <Text style={styles.name}>{userName}</Text>
@@ -88,7 +87,7 @@ const SettingsScreen = ({ navigation }) => {
 
                             <NavLink onPress={() => {
                                     setOpenModal(false);
-                                    navigation.navigate('Home');
+                                    navigation.navigate('Home', {update: true});
                                 }}>
                                 <NavLinkBody active={false}>
                                     <Ionicons name="md-list" size={30} color="black" />
@@ -98,16 +97,18 @@ const SettingsScreen = ({ navigation }) => {
 
                             <NavLink onPress={() => {
                                     setOpenModal(false)
-                                    navigation.navigate('MyDelivery', {userName: userName});
                                 }}>
-                                <NavLinkBody active={false}>
+                                <NavLinkBody active={true}>
                                     <AntDesign name="calendar" size={30} color="black" />
                                     <Text style={{ marginLeft: 10 }}>Мои доставки</Text>
                                 </NavLinkBody>
                             </NavLink>
 
-                            <NavLink onPress={() => setOpenModal(false)}>
-                                <NavLinkBody active={true}>
+                            <NavLink onPress={() => {
+                                    setOpenModal(false);
+                                    navigation.navigate('Settings', {userName: userName});
+                                }}>
+                                <NavLinkBody active={false}>
                                     <Ionicons name="settings" size={30} color="black" />
                                     <Text style={{ marginLeft: 10 }}>Настройки</Text>
                                 </NavLinkBody>
@@ -118,7 +119,6 @@ const SettingsScreen = ({ navigation }) => {
                             </LogoutButton>
 
                         </View>
-                        
                     </View>
                     
                     <Pressable
@@ -140,6 +140,8 @@ const SettingsScreen = ({ navigation }) => {
         setOpenModal(false);
         const fetchDataFromServer = async () => {
             setIsLoading(true);
+            const newData = [];
+
             AsyncStorage.getItem('userInfo').then(res => { 
                 const respObject = JSON.parse(res);
 
@@ -150,17 +152,55 @@ const SettingsScreen = ({ navigation }) => {
 
                 setCountDelivery(countDelivery);
                 setUserImg(userImg);
-    
+                setUserName(userName);
+                
                 axios
-                    .get(`${URL}/deliverymans/${userName}`, {
+                    .get(`${URL}/deliverymans/get-active-delivery`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
-                            }
+                        }
                     })
                     .then(res => {
                         const data = res.data;
-                        AsyncStorage.setItem("userData", JSON.stringify(data))
-                        setUserInfo(data);
+                        let active = true;
+
+                        for (const date in data) {
+                            if (data.hasOwnProperty(date)) {
+                                const period = new Date(date);
+                                const options = { day: 'numeric', month: 'long' };
+                                const formattedDate = period.toLocaleDateString('ru-RU', options);
+
+                                const dateData = data[date];
+
+                                const dataForDate = [];
+
+                                for (const item in dateData) {
+                                    const element = {
+                                        id: dateData[item].id,
+                                        time: dateData[item].dateStart.split('T')[1].slice(0, 5),
+                                        customer: {
+                                            fullName: dateData[item].customer.fio,
+                                            phone: dateData[item].customer.phone,
+                                            img: dateData[item].customer.img,
+                                        },
+                                        car: {
+                                            id: dateData[item].autoId,
+                                        },
+                                        addressDelivery: dateData[item].typeReceipt,
+                                        active: active,
+                                    }
+                                    active = false;
+                                    dataForDate.push(element);
+                                }
+
+                                newData.push({
+                                    title: formattedDate,
+                                    data: dataForDate,
+                                });
+                            }
+                        }
+
+                        setData(newData);
                         setIsLoading(false);
                     })
                     .catch(e => {
@@ -168,19 +208,29 @@ const SettingsScreen = ({ navigation }) => {
                         setIsLoading(false);
                     })
             })
+            .catch(error => {
+                console.log(error);
+            })
         };
-    
+
         fetchDataFromServer();
-    }, []);
+    }, [navigation, update]);
   
     return (
         <Container>
 
-            <Header onMenuPress={onMenuPress} title={'Настройки'}/>
-
             <Spinner visible={isLoading}/>
 
-            <EditDeliverymanForm navigation={navigation}></EditDeliverymanForm>
+            <Header onMenuPress={onMenuPress} title={'Мои доставки'}/>
+
+            <SectionList
+                sections={DATA}
+                keyExtractor={(item, index) => index}
+                renderItem={({ item }) => <DeliveriesToCustomer navigation={navigation} item={item} isActiveDelivery={true}/>}
+                renderSectionHeader={({ section: { title } }) => (
+                    <SectionTitle>{title}</SectionTitle>
+                )}
+            />
 
             {renderModal()}
 
@@ -188,7 +238,7 @@ const SettingsScreen = ({ navigation }) => {
     );
   };
 
-SettingsScreen.navigationOptions = {
+MyDeliveryScreen.navigationOptions = {
     title: null,
     headerLeft: () => {},
     defaultNavigationOptions: {
@@ -259,4 +309,4 @@ const styles = StyleSheet.create({
     }
 })
   
-export default SettingsScreen;
+export default MyDeliveryScreen;
